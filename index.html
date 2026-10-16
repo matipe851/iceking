@@ -146,7 +146,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
   <div class="wrap seg" role="group" aria-label="Filtrar sabores">
     <button data-f="todos" aria-pressed="true">Todos</button>
     <button data-f="ice" aria-pressed="false">❄️ Ice</button>
-    <button data-f="noice" aria-pressed="false">Sin hielo</button>
+    <button data-f="noice" aria-pressed="false">Sin ice</button>
   </div>
 </div>
 
@@ -206,7 +206,7 @@ function header(){
   const pr=promo(); const el=$('promo'); el.hidden=!CAT?.promo;
   if(pr){ const ahorro = pr.unit ? pr.n*pr.unit - pr.precio : 0;
     el.innerHTML=`<span class="lbl">Oferta</span><div class="big"><span class="n">${pr.n}</span><span class="x">×</span><span class="p num">${money(pr.precio)}</span></div>
-      <div class="sub">${esc(pr.resto||`Llevá ${pr.n} sabores a elección`)}${ahorro>0?` · <span class="save">ahorrás ${money(ahorro)}</span>`:''}</div>`; }
+      <div class="sub">${esc(pr.resto||`Llevá ${pr.n} sabores a elección`)}</div>`; }
   else if(CAT?.promo){ el.innerHTML=`<span class="lbl">Oferta</span><div class="txt">${esc(CAT.promo)}</div>`; }
 }
 // "2 x $55.000", "2 por 55000 · Entrega en CABA", "3x$80.000"
