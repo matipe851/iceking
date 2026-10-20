@@ -79,6 +79,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
   background:linear-gradient(180deg,color-mix(in srgb,var(--c) 14%,#fff),color-mix(in srgb,var(--c) 26%,#fff));border-bottom:4px solid var(--steel)}
 
 .name{margin:0;font-family:var(--display);font-weight:800;font-size:25px;line-height:1;letter-spacing:.005em;text-transform:uppercase;text-wrap:balance}
+.desc{margin:6px 0 0;color:var(--muted);font-size:13.5px;line-height:1.35}
 .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .tag{font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:99px}
 .tag.ice{color:#0a5f7d;background:#d6f2fc}
@@ -207,6 +208,11 @@ $('gate-no').onclick=()=>{ document.body.innerHTML='<p class="msg" style="paddin
 document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 
 const items = () => CAT?.items || [];
+// descripción de cada sabor: en el item o en un mapa por sabor (catalogo/actual o catalogo/descripciones)
+let DESC={};
+const kDesc=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+function descDe(i){ const d=i.desc||i.descripcion||i.description; if(d) return String(d);
+  const k=kDesc(i.sabor); for(const m of [CAT?.descripciones,CAT?.desc,DESC]){ if(m&&typeof m==='object') for(const [n,v] of Object.entries(m)) if(kDesc(n)===k&&typeof v==='string') return v; } return ''; }
 function header(){
   // "ELF BAR ICE KING 40K PUFF" → marca + nombre + puffs
   const t=String(CAT?.titulo||'ELF BAR ICE KING 40K PUFF').trim();
@@ -247,7 +253,7 @@ function render(){
   $('list').innerHTML = list.length ? `<div class="grid">${list.map(i=>{ const q=cart[i.id]||0; return `
     <article class="card ${q?'in':''}" style="--c:${colorDe(i.emoji)}">
       <div class="slot" data-slot="${esc(i.id)}"><img src="vape-${modeloDe(i.sabor)}.png?v=1" alt="" width="152" height="316" loading="lazy" decoding="async"></div>
-      <div><h2 class="name">${esc(i.sabor)} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2><div class="tags">${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
+      <div><h2 class="name">${esc(i.sabor)} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2>${descDe(i)?`<p class="desc">${esc(descDe(i))}</p>`:''}<div class="tags">${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
       <div class="foot"><span class="price num">${i.precio?money(i.precio):'Consultar'}</span>
         ${q?`<div class="qty"><button data-m="${esc(i.id)}" aria-label="Quitar uno de ${esc(i.sabor)}">−</button><span class="num">${q}</span><button data-p="${esc(i.id)}" aria-label="Agregar uno de ${esc(i.sabor)}" ${i.max&&q>=i.max?'disabled':''}>+</button></div>`
            :`<button class="add" data-p="${esc(i.id)}">Agregar</button>`}</div></div>
@@ -306,7 +312,8 @@ function updCart(){
 try{
   firebase.initializeApp(window.FIREBASE_CONFIG);
   track('visita');
-  firebase.firestore().doc('catalogo/actual').onSnapshot(d=>{ CAT = d.exists ? d.data() : {items:[]}; render(); },
+  firebase.firestore().doc('catalogo/descripciones').onSnapshot(d=>{ const x=d.exists?d.data():{}; DESC=(x.items&&typeof x.items==='object'&&!Array.isArray(x.items))?x.items:(x.descripciones||x); render(); },()=>{});
+firebase.firestore().doc('catalogo/actual').onSnapshot(d=>{ CAT = d.exists ? d.data() : {items:[]}; render(); },
     err=>{ console.error(err); $('list').innerHTML='<p class="msg">No se pudo cargar el catálogo. Probá de nuevo en un rato.</p>'; });
 }catch(e){ $('list').innerHTML='<p class="msg">No se pudo cargar el catálogo.</p>'; }
 })();
