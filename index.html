@@ -128,6 +128,12 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 .gate-card button{border-radius:14px;padding:14px;font-weight:700;border:1px solid var(--line);background:#fff}
 .gate-card .yes{border:0;color:#fff;background:var(--ink)}
 @media (max-width:420px){.door{padding:22px 14px 18px;border-radius:24px}.card{grid-template-columns:54px 1fr}.slot{height:96px}.slot img{height:80px}}
+/* sabores sin stock: se muestran apagados */
+.card.out{opacity:.6}
+.card.out .slot img{filter:grayscale(1)}
+.card.out .price{text-decoration:line-through;opacity:.6}
+.card.out .add{background:#9aa5b5;cursor:not-allowed}
+.tag.out{color:#fff;background:#4b5563}
 </style>
 </head>
 <body>
@@ -207,7 +213,8 @@ $('gate-yes').onclick=()=>{ ls.set('ik_18','1'); $('gate').hidden=true; };
 $('gate-no').onclick=()=>{ document.body.innerHTML='<p class="msg" style="padding:120px 16px">Este catálogo es solo para mayores de 18 años.</p>'; };
 document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 
-const items = () => CAT?.items || [];
+const todos = () => CAT?.items || [];
+const items = () => todos().filter(i=>!i.agotado);
 // descripción de cada sabor: en el item o en un mapa por sabor (catalogo/actual o catalogo/descripciones)
 let DESC={};
 const kDesc=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
@@ -249,14 +256,14 @@ function render(){
   if(CAT.activo===false){ $('list').innerHTML='<p class="msg">El catálogo no está disponible en este momento. Escribinos por WhatsApp.</p>'; updCart(); return; }
   header(); fridge(items().map(i=>colorDe(i.emoji)));
   const ids=new Set(items().map(i=>i.id)); for(const k of Object.keys(cart)) if(!ids.has(k)) delete cart[k];
-  const list=items().filter(i=> filtro==='todos' || (filtro==='ice'? i.ice : !i.ice));
+  const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> filtro==='todos' || (filtro==='ice'? i.ice : !i.ice));
   $('list').innerHTML = list.length ? `<div class="grid">${list.map(i=>{ const q=cart[i.id]||0; return `
-    <article class="card ${q?'in':''}" style="--c:${colorDe(i.emoji)}">
+    <article class="card ${q?'in':''}${i.agotado?' out':''}" style="--c:${colorDe(i.emoji)}">
       <div class="slot" data-slot="${esc(i.id)}"><img src="vape-${modeloDe(i.sabor)}.png?v=1" alt="" width="152" height="316" loading="lazy" decoding="async"></div>
-      <div><h2 class="name">${esc(i.sabor)} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2>${descDe(i)?`<p class="desc">${esc(descDe(i))}</p>`:''}<div class="tags">${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
+      <div><h2 class="name">${esc(i.sabor)} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2>${descDe(i)?`<p class="desc">${esc(descDe(i))}</p>`:''}<div class="tags">${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.agotado?'<span class="tag out">Sin stock</span>':''}${!i.agotado&&i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
       <div class="foot"><span class="price num">${i.precio?money(i.precio):'Consultar'}</span>
         ${q?`<div class="qty"><button data-m="${esc(i.id)}" aria-label="Quitar uno de ${esc(i.sabor)}">−</button><span class="num">${q}</span><button data-p="${esc(i.id)}" aria-label="Agregar uno de ${esc(i.sabor)}" ${i.max&&q>=i.max?'disabled':''}>+</button></div>`
-           :`<button class="add" data-p="${esc(i.id)}">Agregar</button>`}</div></div>
+           :(i.agotado?'<button class="add" disabled>Sin stock</button>':`<button class="add" data-p="${esc(i.id)}">Agregar</button>`)}</div></div>
     </article>`; }).join('')}</div>` : `<p class="msg">${items().length?'No hay sabores en este filtro.':'Por ahora no hay sabores en stock. Escribinos y te avisamos cuando lleguen.'}</p>`;
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const it=items().find(x=>x.id===b.dataset.p); const q=(cart[it.id]||0)+1; if(it.max&&q>it.max) return; cart[it.id]=q; save(); render(); spin(it.id); const c=$('cart'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); });
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const k=b.dataset.m; cart[k]=(cart[k]||0)-1; if(cart[k]<=0) delete cart[k]; save(); render(); });
