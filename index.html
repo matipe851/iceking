@@ -254,7 +254,7 @@ let CAT=null, cart={}, filtro='todos';
 try{ cart=JSON.parse(ls.get('ik_cart')||'{}')||{}; }catch(e){ cart={}; }
 
 if(ls.get('ik_18')!=='1') $('gate').hidden=false;
-$('gate-yes').onclick=()=>{ ls.set('ik_18','1'); $('gate').hidden=true; };
+$('gate-yes').onclick=()=>{ ls.set('ik_18','1'); $('gate').hidden=true; rfAuto(); };
 $('gate-no').onclick=()=>{ document.body.innerHTML='<p class="msg" style="padding:120px 16px">Este catálogo es solo para mayores de 18 años.</p>'; };
 document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 
@@ -452,6 +452,9 @@ function rfRender(yaEstaba){
 $('rf-go').onclick=rfOpen;
 $('rf-sheet').addEventListener('click',e=>{ if(e.target===$('rf-sheet')) rfClose(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('rf-sheet').hidden) rfClose(); });
+// link de invitación (?sorteo): abre el formulario del sorteo apenas entra (después de confirmar que es mayor de 18)
+const RF_AUTO=/[?&]sorteo\b/.test(location.search) || location.hash==='#sorteo'; let rfAutoHecho=false;
+function rfAuto(){ if(!RF_AUTO || rfAutoHecho || !(RF&&RF.activo) || !$('gate').hidden) return; rfAutoHecho=true; setTimeout(rfOpen,300); }
 function rfVisit(){
   // una visita por celular a cada link; tu propio link no cuenta
   if(!refOk || REF===myId()) return;
@@ -462,7 +465,7 @@ try{
   firebase.initializeApp(window.FIREBASE_CONFIG);
   track('visita');
   rfVisit();
-  firebase.firestore().doc('catalogo/sorteo').onSnapshot(d=>{ RF=d.exists?d.data():null; rfBanner(); },()=>{});
+  firebase.firestore().doc('catalogo/sorteo').onSnapshot(d=>{ RF=d.exists?d.data():null; rfBanner(); rfAuto(); },()=>{});
   firebase.firestore().doc('catalogo/descripciones').onSnapshot(d=>{ const x=d.exists?d.data():{}; DESC=(x.items&&typeof x.items==='object'&&!Array.isArray(x.items))?x.items:(x.descripciones||x); render(); },()=>{});
 firebase.firestore().doc('catalogo/actual').onSnapshot(d=>{ CAT = d.exists ? d.data() : {items:[]}; render(); },
     err=>{ console.error(err); $('list').innerHTML='<p class="msg">No se pudo cargar el catálogo. Probá de nuevo en un rato.</p>'; });
