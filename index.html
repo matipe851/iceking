@@ -197,7 +197,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 
 <section class="wrap" id="rf" hidden>
   <div class="raffle">
-    <div><h2 id="rf-tit">Sorteo de un Ice King</h2><p id="rf-txt">Compartí el catálogo con tus amigos. Cuando alguien entra por tu link, ya estás participando.</p></div>
+    <div><h2 id="rf-tit">Sorteo de un Ice King</h2><p id="rf-txt">Mandá tu link a 5 amigos. Cuando 2 se anotan, ya estás participando.</p></div>
     <button class="go" id="rf-go">Quiero participar</button>
   </div>
 </section>
@@ -368,17 +368,19 @@ const REF=(new URLSearchParams(location.search).get('ref')||'').toLowerCase();
 const refOk = /^[a-z0-9]{8,20}$/.test(REF);
 if(refOk && !ls.get('ik_from')) ls.set('ik_from',REF);
 let RF=null; // config del sorteo
+const rfMin = () => { const n=parseInt(RF?.minimo,10); return n>=1&&n<=20?n:2; };
+const amigos = n => `${n} amigo${n===1?'':'s'}`;
 const myId = () => { const x=ls.get('ik_sorteo'); return /^[a-z0-9]{8,20}$/.test(x||'')?x:null; };
 const myLink = id => `${location.origin}${location.pathname.replace(/index\.html$/,'')}?ref=${id}`;
 function rfBanner(){
   const on=!!(RF && RF.activo && !(CAT&&CAT.activo===false)); $('rf').hidden=!on; if(!on) return;
   $('rf-tit').textContent = `Sorteo de ${RF.premio||'un Ice King'}`;
-  $('rf-txt').textContent = myId() ? 'Ya te anotaste. Compartí tu link: cada persona que entra por él te suma una chance.' : 'Compartí el catálogo con tus amigos. Cuando alguien entra por tu link, ya estás participando.';
+  $('rf-txt').textContent = myId() ? `Ya te anotaste. Mandá tu link: participás cuando ${amigos(rfMin())} se ${rfMin()===1?'anota':'anotan'} desde él.` : `Mandá tu link a 5 amigos. Cuando ${rfMin()} se ${rfMin()===1?'anota':'anotan'}, ya estás participando.`;
   $('rf-go').textContent = myId() ? 'Ver mi link' : 'Quiero participar';
 }
 function bases(){
   const f = RF?.fecha ? new Date(RF.fecha+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) : null;
-  return `Se sortea ${esc(RF?.premio||'un Elf Bar Ice King')}${f?` el ${esc(f)}`:''} entre mayores de 18 que se anoten acá. Quedás participando cuando al menos una persona entra al catálogo por tu link, y cada persona distinta que entra suma una chance. Tu propio celular no cuenta. No hace falta comprar nada. El ganador se avisa por WhatsApp al número que dejes. Tu número se usa solo para el sorteo y para avisarte de novedades del catálogo; si no querés más mensajes, avisá y te damos de baja.`;
+  return `Se sortea ${esc(RF?.premio||'un Elf Bar Ice King')}${f?` el ${esc(f)}`:''} entre mayores de 18 que se anoten acá. Para participar, mandá tu link a 5 amigos: quedás adentro cuando al menos ${amigos(rfMin())} se ${rfMin()===1?'anota':'anotan'} al sorteo entrando por tu link, y cada amigo anotado te suma una chance. Anotarte vos mismo desde otro link o desde tu celular no cuenta. No hace falta comprar nada. El ganador se avisa por WhatsApp al número que dejes. Tu número se usa solo para el sorteo y para avisarte de novedades del catálogo; si no querés más mensajes, avisá y te damos de baja.`;
 }
 function rfOpen(){ rfRender(); $('rf-sheet').hidden=false; setTimeout(()=>{ const f=$('rf-card').querySelector('input,button'); f&&f.focus(); },50); }
 function rfClose(){ $('rf-sheet').hidden=true; $('rf-go').focus(); }
@@ -386,7 +388,7 @@ function rfRender(){
   const id=myId(); const c=$('rf-card');
   if(!id){
     c.innerHTML=`<h2 id="rf-h">Participá por ${esc(RF?.premio||'un Ice King')}</h2>
-      <ol class="steps"><li>Dejá tu nombre y tu WhatsApp.</li><li>Te damos tu link del catálogo.</li><li>Mandalo a tus amigos. Cuando alguien entra, ya participás.</li></ol>
+      <ol class="steps"><li>Dejá tu nombre y tu WhatsApp.</li><li>Te damos tu link del catálogo.</li><li>Mandalo a 5 amigos. Cuando ${amigos(rfMin())} se ${rfMin()===1?'anota':'anotan'}, ya participás.</li></ol>
       <form id="rf-f" novalidate style="display:grid;gap:12px">
         <label>Tu nombre<input type="text" id="rf-n" maxlength="40" autocomplete="name" required></label>
         <label>Tu WhatsApp<input type="tel" id="rf-t" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="11 2345-6789" required></label>
@@ -409,9 +411,9 @@ function rfRender(){
     };
   } else {
     const link=myLink(id);
-    const msg=`Mirá este catálogo de vapes 👀❄️ ${CAT?.titulo?String(CAT.titulo).replace(/\s+/g,' ').trim()+'. ':''}Pedís por WhatsApp:\n${link}`;
+    const msg=`Mirá este catálogo de vapes 👀❄️ Están sorteando ${RF?.premio||'un Ice King'}: entrá y anotate vos también, así los dos participamos 🎁\n${link}`;
     c.innerHTML=`<h2 id="rf-h">Ya estás anotado</h2>
-      <p>Mandale este link a tus amigos o subilo a tu estado. Cuando alguien entra por él, quedás participando, y cada persona nueva te suma una chance.</p>
+      <p>Mandale este link a 5 amigos. Para participar, ${amigos(rfMin())} se ${rfMin()===1?'tiene':'tienen'} que anotar al sorteo desde tu link. Cada amigo anotado te suma una chance.</p>
       <div class="mylink"><input id="rf-link" readonly value="${esc(link)}" aria-label="Tu link"><button type="button" id="rf-copy">Copiar</button></div>
       <a class="wa" id="rf-share" href="https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Z"/></svg>Compartir por WhatsApp</a>
       <details><summary>Bases del sorteo</summary><p style="margin-top:6px">${bases()}</p></details>
