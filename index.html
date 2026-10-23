@@ -151,7 +151,8 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 @media (min-width:560px){.sheet-card{border-radius:24px}}
 .sheet-card h2{margin:0;font-family:var(--display);font-weight:900;font-size:34px;line-height:1;text-transform:uppercase}
 .sheet-card p{margin:0;color:var(--muted);font-size:14.5px}
-.sheet-card label{display:grid;gap:5px;font-weight:600;font-size:14px}
+.sheet-card label{display:grid;gap:5px;font-weight:600;font-size:14px;min-width:0}
+.sheet-card input[type=text],.sheet-card input[type=tel]{width:100%;min-width:0}
 .sheet-card input[type=text],.sheet-card input[type=tel]{font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--frost);color:var(--ink)}
 .sheet-card input:focus-visible{outline:3px solid var(--led);outline-offset:1px}
 .sheet-card .chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:13.5px;color:var(--muted)}
@@ -388,9 +389,12 @@ function rfRender(){
   const id=myId(); const c=$('rf-card');
   if(!id){
     c.innerHTML=`<h2 id="rf-h">Participá por ${esc(RF?.premio||'un Ice King')}</h2>
-      <ol class="steps"><li>Dejá tu nombre y tu WhatsApp.</li><li>Te damos tu link del catálogo.</li><li>Mandalo a 5 amigos. Cuando ${amigos(rfMin())} se ${rfMin()===1?'anota':'anotan'}, ya participás.</li></ol>
+      <ol class="steps"><li>Dejá tu nombre, apellido y WhatsApp.</li><li>Te damos tu link del catálogo.</li><li>Mandalo a 5 amigos. Cuando ${amigos(rfMin())} se ${rfMin()===1?'anota':'anotan'}, ya participás.</li></ol>
       <form id="rf-f" novalidate style="display:grid;gap:12px">
-        <label>Tu nombre<input type="text" id="rf-n" maxlength="40" autocomplete="name" required></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <label>Nombre<input type="text" id="rf-n" maxlength="19" autocomplete="given-name" autocapitalize="words" required></label>
+          <label>Apellido<input type="text" id="rf-a" maxlength="20" autocomplete="family-name" autocapitalize="words" required></label>
+        </div>
         <label>Tu WhatsApp<input type="tel" id="rf-t" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="11 2345-6789" required></label>
         <label class="chk"><input type="checkbox" id="rf-ok"> <span>Soy mayor de 18 y acepto que me escriban por WhatsApp para el sorteo y novedades del catálogo.</span></label>
         <details><summary>Bases del sorteo</summary><p style="margin-top:6px">${bases()}</p></details>
@@ -399,8 +403,12 @@ function rfRender(){
         <button class="close" type="button" data-rf-close>Ahora no</button>
       </form>`;
     $('rf-f').onsubmit=async e=>{ e.preventDefault();
-      const n=$('rf-n').value.trim(), t=$('rf-t').value.trim(), dig=t.replace(/\D/g,'');
-      if(!n) return $('rf-err').textContent='Escribí tu nombre.';
+      const cap=x=>x.replace(/\s+/g,' ').trim().toLowerCase().replace(/(^|[\s'-])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
+      const nom=cap($('rf-n').value), ape=cap($('rf-a').value), t=$('rf-t').value.trim(), dig=t.replace(/\D/g,'');
+      const letras=x=>(x.match(/\p{L}/gu)||[]).length;
+      if(letras(nom)<2) return $('rf-err').textContent='Escribí tu nombre.';
+      if(letras(ape)<2) return $('rf-err').textContent='Escribí tu apellido.';
+      const n=`${nom} ${ape}`;
       if(dig.length<8||dig.length>15) return $('rf-err').textContent='Revisá el número: tiene que tener el código de área, por ejemplo 11 2345-6789.';
       if(!$('rf-ok').checked) return $('rf-err').textContent='Para participar tenés que aceptar las bases.';
       $('rf-send').disabled=true; $('rf-err').textContent='';
