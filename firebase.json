@@ -2,6 +2,6 @@
   "hosting": {
     "site": "vapdm-ba",
     "public": ".",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
+    "ignore": ["firebase.json", ".git", ".git/**", "**/.*", "**/node_modules/**"]
   }
 }
