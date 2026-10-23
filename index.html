@@ -134,6 +134,38 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 .card.out .price{text-decoration:line-through;opacity:.6}
 .card.out .add{background:#9aa5b5;cursor:not-allowed}
 .tag.out{color:#fff;background:#4b5563}
+
+/* sorteo: boleta para compartir el catálogo */
+.raffle{margin:14px auto 0;max-width:640px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;padding:16px 16px 16px 20px;border-radius:22px;
+  background:var(--ink);color:#fff;position:relative;box-shadow:0 22px 44px -22px rgba(14,42,68,.7)}
+.raffle::before,.raffle::after{content:"";position:absolute;right:118px;width:18px;height:18px;border-radius:50%;background:var(--frost)}
+.raffle::before{top:-9px}.raffle::after{bottom:-9px}
+.raffle h2{margin:0;font-family:var(--display);font-weight:900;font-size:30px;line-height:.95;text-transform:uppercase}
+.raffle p{margin:6px 0 0;color:#a9c3d6;font-size:14px;line-height:1.35}
+.raffle .go{border:0;border-radius:14px;padding:14px 16px;font-weight:700;background:var(--tag);color:var(--tag-ink);white-space:nowrap}
+.raffle .go:hover{filter:brightness(1.05)}
+@media (max-width:420px){.raffle{grid-template-columns:1fr}.raffle::before,.raffle::after{display:none}.raffle .go{width:100%}}
+.sheet{position:fixed;inset:0;z-index:15;display:grid;place-items:end center;background:rgba(14,42,68,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+@media (min-width:560px){.sheet{place-items:center}}
+.sheet-card{width:100%;max-width:440px;max-height:92vh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:24px 20px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:12px}
+@media (min-width:560px){.sheet-card{border-radius:24px}}
+.sheet-card h2{margin:0;font-family:var(--display);font-weight:900;font-size:34px;line-height:1;text-transform:uppercase}
+.sheet-card p{margin:0;color:var(--muted);font-size:14.5px}
+.sheet-card label{display:grid;gap:5px;font-weight:600;font-size:14px}
+.sheet-card input[type=text],.sheet-card input[type=tel]{font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--frost);color:var(--ink)}
+.sheet-card input:focus-visible{outline:3px solid var(--led);outline-offset:1px}
+.sheet-card .chk{display:flex;gap:10px;align-items:flex-start;font-weight:500;font-size:13.5px;color:var(--muted)}
+.sheet-card .chk input{margin-top:3px;width:18px;height:18px;flex:none}
+.sheet-card details{font-size:13px;color:var(--muted)}
+.sheet-card summary{cursor:pointer;font-weight:600;color:var(--ink)}
+.sheet-card .err{color:var(--low);font-size:13.5px;font-weight:600;min-height:1em}
+.sheet-card .primary{border:0;border-radius:14px;padding:15px;font-weight:700;color:#fff;background:var(--ink)}
+.sheet-card .close{border:1px solid var(--line);border-radius:14px;padding:12px;font-weight:600;background:#fff}
+.sheet-card .wa{justify-content:center;font-size:16px;padding:15px}
+.mylink{display:flex;gap:8px}
+.mylink input{flex:1;min-width:0;font:inherit;font-size:14px;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--frost);color:var(--ink)}
+.mylink button{border:1px solid var(--line);border-radius:12px;padding:0 14px;font-weight:600;background:#fff}
+.steps{margin:0;padding-left:20px;color:var(--muted);font-size:14px;display:grid;gap:4px}
 </style>
 </head>
 <body>
@@ -161,6 +193,18 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
     <div class="offer" id="promo" hidden></div>
   </div>
 </header>
+
+
+<section class="wrap" id="rf" hidden>
+  <div class="raffle">
+    <div><h2 id="rf-tit">Sorteo de un Ice King</h2><p id="rf-txt">Compartí el catálogo con tus amigos. Cuando alguien entra por tu link, ya estás participando.</p></div>
+    <button class="go" id="rf-go">Quiero participar</button>
+  </div>
+</section>
+
+<div class="sheet" id="rf-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="rf-h">
+  <div class="sheet-card" id="rf-card"></div>
+</div>
 
 <div class="bar">
   <div class="wrap seg" role="group" aria-label="Filtrar sabores">
@@ -254,7 +298,7 @@ function totalCon(sel){
 function render(){
   if(!CAT) return;
   if(CAT.activo===false){ $('list').innerHTML='<p class="msg">El catálogo no está disponible en este momento. Escribinos por WhatsApp.</p>'; updCart(); return; }
-  header(); fridge(items().map(i=>colorDe(i.emoji)));
+  rfBanner(); header(); fridge(items().map(i=>colorDe(i.emoji)));
   const ids=new Set(items().map(i=>i.id)); for(const k of Object.keys(cart)) if(!ids.has(k)) delete cart[k];
   const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> filtro==='todos' || (filtro==='ice'? i.ice : !i.ice));
   $('list').innerHTML = list.length ? `<div class="grid">${list.map(i=>{ const q=cart[i.id]||0; return `
@@ -316,9 +360,80 @@ function updCart(){
     a.href=`https://api.whatsapp.com/send?phone=${tel}&text=${encodeURIComponent(txt)}`; a.setAttribute('aria-disabled','false');
   } else { a.href='#'; a.setAttribute('aria-disabled','true'); }
 }
+
+// ---------- sorteo: cada participante comparte su propio link del catálogo ----------
+const rid = n => { const a='abcdefghijkmnpqrstuvwxyz23456789'; let o=''; const r=crypto.getRandomValues(new Uint8Array(n)); for(const x of r) o+=a[x%a.length]; return o; };
+let DEV=ls.get('ik_dev'); if(!DEV || !/^[a-z0-9]{12,40}$/.test(DEV)){ DEV=rid(16); ls.set('ik_dev',DEV); }
+const REF=(new URLSearchParams(location.search).get('ref')||'').toLowerCase();
+const refOk = /^[a-z0-9]{8,20}$/.test(REF);
+if(refOk && !ls.get('ik_from')) ls.set('ik_from',REF);
+let RF=null; // config del sorteo
+const myId = () => { const x=ls.get('ik_sorteo'); return /^[a-z0-9]{8,20}$/.test(x||'')?x:null; };
+const myLink = id => `${location.origin}${location.pathname.replace(/index\.html$/,'')}?ref=${id}`;
+function rfBanner(){
+  const on=!!(RF && RF.activo && !(CAT&&CAT.activo===false)); $('rf').hidden=!on; if(!on) return;
+  $('rf-tit').textContent = `Sorteo de ${RF.premio||'un Ice King'}`;
+  $('rf-txt').textContent = myId() ? 'Ya te anotaste. Compartí tu link: cada persona que entra por él te suma una chance.' : 'Compartí el catálogo con tus amigos. Cuando alguien entra por tu link, ya estás participando.';
+  $('rf-go').textContent = myId() ? 'Ver mi link' : 'Quiero participar';
+}
+function bases(){
+  const f = RF?.fecha ? new Date(RF.fecha+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long'}) : null;
+  return `Se sortea ${esc(RF?.premio||'un Elf Bar Ice King')}${f?` el ${esc(f)}`:''} entre mayores de 18 que se anoten acá. Quedás participando cuando al menos una persona entra al catálogo por tu link, y cada persona distinta que entra suma una chance. Tu propio celular no cuenta. No hace falta comprar nada. El ganador se avisa por WhatsApp al número que dejes. Tu número se usa solo para el sorteo y para avisarte de novedades del catálogo; si no querés más mensajes, avisá y te damos de baja.`;
+}
+function rfOpen(){ rfRender(); $('rf-sheet').hidden=false; setTimeout(()=>{ const f=$('rf-card').querySelector('input,button'); f&&f.focus(); },50); }
+function rfClose(){ $('rf-sheet').hidden=true; $('rf-go').focus(); }
+function rfRender(){
+  const id=myId(); const c=$('rf-card');
+  if(!id){
+    c.innerHTML=`<h2 id="rf-h">Participá por ${esc(RF?.premio||'un Ice King')}</h2>
+      <ol class="steps"><li>Dejá tu nombre y tu WhatsApp.</li><li>Te damos tu link del catálogo.</li><li>Mandalo a tus amigos. Cuando alguien entra, ya participás.</li></ol>
+      <form id="rf-f" novalidate style="display:grid;gap:12px">
+        <label>Tu nombre<input type="text" id="rf-n" maxlength="40" autocomplete="name" required></label>
+        <label>Tu WhatsApp<input type="tel" id="rf-t" maxlength="20" inputmode="tel" autocomplete="tel" placeholder="11 2345-6789" required></label>
+        <label class="chk"><input type="checkbox" id="rf-ok"> <span>Soy mayor de 18 y acepto que me escriban por WhatsApp para el sorteo y novedades del catálogo.</span></label>
+        <details><summary>Bases del sorteo</summary><p style="margin-top:6px">${bases()}</p></details>
+        <div class="err" id="rf-err" role="alert"></div>
+        <button class="primary" type="submit" id="rf-send">Anotarme y ver mi link</button>
+        <button class="close" type="button" data-rf-close>Ahora no</button>
+      </form>`;
+    $('rf-f').onsubmit=async e=>{ e.preventDefault();
+      const n=$('rf-n').value.trim(), t=$('rf-t').value.trim(), dig=t.replace(/\D/g,'');
+      if(!n) return $('rf-err').textContent='Escribí tu nombre.';
+      if(dig.length<8||dig.length>15) return $('rf-err').textContent='Revisá el número: tiene que tener el código de área, por ejemplo 11 2345-6789.';
+      if(!$('rf-ok').checked) return $('rf-err').textContent='Para participar tenés que aceptar las bases.';
+      $('rf-send').disabled=true; $('rf-err').textContent='';
+      const nid=rid(10); const from=ls.get('ik_from'); const d={nombre:n.slice(0,40), tel:t.slice(0,20), dev:DEV, creado:Date.now()};
+      if(from && /^[a-z0-9]{8,20}$/.test(from)) d.ref=from;
+      try{ await firebase.firestore().doc('sorteo/'+nid).set(d); ls.set('ik_sorteo',nid); rfBanner(); rfRender(); }
+      catch(err){ console.error(err); $('rf-send').disabled=false; $('rf-err').textContent='No se pudo anotar. Probá de nuevo en un rato.'; }
+    };
+  } else {
+    const link=myLink(id);
+    const msg=`Mirá este catálogo de vapes 👀❄️ ${CAT?.titulo?String(CAT.titulo).replace(/\s+/g,' ').trim()+'. ':''}Pedís por WhatsApp:\n${link}`;
+    c.innerHTML=`<h2 id="rf-h">Ya estás anotado</h2>
+      <p>Mandale este link a tus amigos o subilo a tu estado. Cuando alguien entra por él, quedás participando, y cada persona nueva te suma una chance.</p>
+      <div class="mylink"><input id="rf-link" readonly value="${esc(link)}" aria-label="Tu link"><button type="button" id="rf-copy">Copiar</button></div>
+      <a class="wa" id="rf-share" href="https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Z"/></svg>Compartir por WhatsApp</a>
+      <details><summary>Bases del sorteo</summary><p style="margin-top:6px">${bases()}</p></details>
+      <button class="close" type="button" data-rf-close>Cerrar</button>`;
+    $('rf-copy').onclick=async()=>{ try{ await navigator.clipboard.writeText(link); $('rf-copy').textContent='Copiado'; }catch(e){ $('rf-link').select(); } };
+  }
+  c.querySelectorAll('[data-rf-close]').forEach(b=>b.onclick=rfClose);
+}
+$('rf-go').onclick=rfOpen;
+$('rf-sheet').addEventListener('click',e=>{ if(e.target===$('rf-sheet')) rfClose(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('rf-sheet').hidden) rfClose(); });
+function rfVisit(){
+  // una visita por celular a cada link; tu propio link no cuenta
+  if(!refOk || REF===myId()) return;
+  const k='ik_v_'+REF; if(ls.get(k)) return;
+  firebase.firestore().doc(`sorteo/${REF}/visitas/${DEV}`).set({t:Date.now()}).then(()=>ls.set(k,'1')).catch(()=>ls.set(k,'1'));
+}
 try{
   firebase.initializeApp(window.FIREBASE_CONFIG);
   track('visita');
+  rfVisit();
+  firebase.firestore().doc('catalogo/sorteo').onSnapshot(d=>{ RF=d.exists?d.data():null; rfBanner(); },()=>{});
   firebase.firestore().doc('catalogo/descripciones').onSnapshot(d=>{ const x=d.exists?d.data():{}; DESC=(x.items&&typeof x.items==='object'&&!Array.isArray(x.items))?x.items:(x.descripciones||x); render(); },()=>{});
 firebase.firestore().doc('catalogo/actual').onSnapshot(d=>{ CAT = d.exists ? d.data() : {items:[]}; render(); },
     err=>{ console.error(err); $('list').innerHTML='<p class="msg">No se pudo cargar el catálogo. Probá de nuevo en un rato.</p>'; });
