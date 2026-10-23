@@ -442,7 +442,9 @@ function rfRender(yaEstaba){
       <div class="mylink"><input id="rf-link" readonly value="${esc(link)}" aria-label="Tu link"><button type="button" id="rf-copy">Copiar</button></div>
       <a class="wa" id="rf-share" href="https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Z"/></svg>Compartir por WhatsApp</a>
       <details><summary>Bases del sorteo</summary><p style="margin-top:6px">${bases()}</p></details>
-      <button class="close" type="button" data-rf-close>Cerrar</button>`;
+      <button class="close" type="button" data-rf-close>Cerrar</button>
+      <button type="button" id="rf-otro" style="border:0;background:none;color:var(--muted);font-size:13.5px;text-decoration:underline;padding:4px">¿No sos vos? Anotar otro número</button>`;
+    $('rf-otro').onclick=()=>{ try{ localStorage.removeItem('ik_sorteo'); }catch(e){} rfBanner(); rfRender(); };
     $('rf-copy').onclick=async()=>{ try{ await navigator.clipboard.writeText(link); $('rf-copy').textContent='Copiado'; }catch(e){ $('rf-link').select(); } };
   }
   c.querySelectorAll('[data-rf-close]').forEach(b=>b.onclick=rfClose);
