@@ -385,7 +385,19 @@ function bases(){
 }
 function rfOpen(){ rfRender(); $('rf-sheet').hidden=false; setTimeout(()=>{ const f=$('rf-card').querySelector('input,button'); f&&f.focus(); },50); }
 function rfClose(){ $('rf-sheet').hidden=true; $('rf-go').focus(); }
-function rfRender(){
+// número argentino normalizado (549 + área + número) → id corto y fijo para ese número
+function telNorm(raw){ let d=String(raw||'').replace(/\D/g,''); if(d.startsWith('00')) d=d.slice(2);
+  if(d.startsWith('54')){ d=d.slice(2); if(d.startsWith('9')) d=d.slice(1); } if(d.startsWith('0')) d=d.slice(1);
+  if(d.length===8) d='11'+d; else if(d.length===10&&d.startsWith('15')) d='11'+d.slice(2);
+  else if(d.length===12){ for(const a of [2,3,4]) if(d.slice(a,a+2)==='15'){ d=d.slice(0,a)+d.slice(a+2); break; } }
+  return d; }
+async function idDeTel(t){ // hash fijo (cyrb53 doble) del número normalizado
+  const str='ik-sorteo|'+telNorm(t); const h=seed=>{ let h1=0xdeadbeef^seed, h2=0x41c6ce57^seed;
+    for(let i=0;i<str.length;i++){ const ch=str.charCodeAt(i); h1=Math.imul(h1^ch,2654435761); h2=Math.imul(h2^ch,1597334677); }
+    h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+    return (h2>>>0).toString(16).padStart(8,'0')+(h1>>>0).toString(16).padStart(8,'0'); };
+  return 'p'+(h(7)+h(11)).slice(0,15); }
+function rfRender(yaEstaba){
   const id=myId(); const c=$('rf-card');
   if(!id){
     c.innerHTML=`<h2 id="rf-h">Participá por ${esc(RF?.premio||'un Ice King')}</h2>
@@ -412,15 +424,20 @@ function rfRender(){
       if(dig.length<8||dig.length>15) return $('rf-err').textContent='Revisá el número: tiene que tener el código de área, por ejemplo 11 2345-6789.';
       if(!$('rf-ok').checked) return $('rf-err').textContent='Para participar tenés que aceptar las bases.';
       $('rf-send').disabled=true; $('rf-err').textContent='';
-      const nid=rid(10); const from=ls.get('ik_from'); const d={nombre:n.slice(0,40), tel:t.slice(0,20), dev:DEV, creado:Date.now()};
-      if(from && /^[a-z0-9]{8,20}$/.test(from)) d.ref=from;
-      try{ await firebase.firestore().doc('sorteo/'+nid).set(d); ls.set('ik_sorteo',nid); rfBanner(); rfRender(); }
-      catch(err){ console.error(err); $('rf-send').disabled=false; $('rf-err').textContent='No se pudo anotar. Probá de nuevo en un rato.'; }
+      // el id sale del número de WhatsApp: el mismo número no se puede anotar dos veces (la base no deja pisar un registro)
+      const nid=await idDeTel(t); const from=ls.get('ik_from'); const d={nombre:n.slice(0,40), tel:t.slice(0,20), dev:DEV, creado:Date.now()};
+      if(from && /^[a-z0-9]{8,20}$/.test(from) && from!==nid) d.ref=from;
+      const ref=firebase.firestore().doc('sorteo/'+nid);
+      try{ await ref.set(d); ls.set('ik_sorteo',nid); rfBanner(); rfRender(); }
+      catch(err){
+        if(err && err.code==='permission-denied'){ ls.set('ik_sorteo',nid); rfBanner(); rfRender(true); return; }
+        console.error(err); $('rf-send').disabled=false; $('rf-err').textContent='No se pudo anotar. Probá de nuevo en un rato.'; }
     };
   } else {
     const link=myLink(id);
     const msg=`Mirá este catálogo de vapes 👀❄️ Están sorteando ${RF?.premio||'un Ice King'}: entrá y anotate vos también, así los dos participamos 🎁\n${link}`;
     c.innerHTML=`<h2 id="rf-h">Ya estás anotado</h2>
+      ${yaEstaba?'<p><b>Ese WhatsApp ya estaba anotado en el sorteo</b>, así que no se volvió a registrar. Este es tu link de siempre:</p>':''}
       <p>Mandale este link a 5 amigos. Para participar, ${amigos(rfMin())} se ${rfMin()===1?'tiene':'tienen'} que anotar al sorteo desde tu link. Cada amigo anotado te suma una chance.</p>
       <div class="mylink"><input id="rf-link" readonly value="${esc(link)}" aria-label="Tu link"><button type="button" id="rf-copy">Copiar</button></div>
       <a class="wa" id="rf-share" href="https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Z"/></svg>Compartir por WhatsApp</a>
