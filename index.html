@@ -84,6 +84,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 .panel-h p{margin:0;font-weight:600;font-size:14.5px;color:var(--muted)}
 .panel-h p b{color:var(--ink)}
 .panel .msg{background:transparent}
+.agot{margin:12px 4px 2px;font-size:13.5px;color:var(--muted)}
 /* estantes por modelo */
 .shelf{margin-top:18px}
 .shelf:first-child{margin-top:4px}
@@ -346,7 +347,8 @@ function render(){
   { const ps=[...new Set(items().filter(i=>modDe(i)===modelo).map(i=>i.precio).filter(Boolean))]; const pr=promo(modelo);
     $('tab-info').innerHTML = `${MOD[modelo].marca} ${MOD[modelo].nombre} 40K${ps.length?` · <b class="num">${money(Math.min(...ps))}</b> c/u`:''}${pr?` · oferta <b class="num">${pr.n} × ${money(pr.precio)}</b>`:''}`; }
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ modelo=b.dataset.tab; ls.set('ik_mod',modelo); render(); });
-  const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> (filtro==='todos' || (filtro==='ice'? i.ice : !i.ice)) && modDe(i)===modelo);
+  const list=items().filter(i=> (filtro==='todos' || (filtro==='ice'? i.ice : !i.ice)) && modDe(i)===modelo);
+  const sinStock=todos().filter(i=>i.agotado && modDe(i)===modelo).map(i=>nombre(i.sabor));
   const card = i=>{ const q=cart[i.id]||0; return `
     <article class="card ${q?'in':''}${i.agotado?' out':''}" style="--c:${colorCard(i)}">
       <div class="slot" data-slot="${esc(i.id)}"><img src="vape-${modeloDe(i.sabor)}.png?v=2" alt="" width="152" height="316" loading="lazy" decoding="async"></div>
@@ -355,7 +357,7 @@ function render(){
         ${q?`<div class="qty"><button data-m="${esc(i.id)}" aria-label="Quitar uno de ${esc(i.sabor)}">−</button><span class="num">${q}</span><button data-p="${esc(i.id)}" aria-label="Agregar uno de ${esc(i.sabor)}" ${i.max&&q>=i.max?'disabled':''}>+</button></div>`
            :(i.agotado?'<button class="add" disabled>Sin stock</button>':`<button class="add" data-p="${esc(i.id)}">Agregar</button>`)}</div></div>
     </article>`; };
-  $('list').innerHTML = list.length ? `<div class="grid">${list.map(card).join('')}</div>` : `<p class="msg">${items().length?'No hay sabores en este filtro.':'Por ahora no hay sabores en stock. Escribinos y te avisamos cuando lleguen.'}</p>`;
+  $('list').innerHTML = list.length ? `<div class="grid">${list.map(card).join('')}</div>${sinStock.length?`<p class="agot">Sin stock por ahora: ${esc(sinStock.join(', '))}</p>`:''}` : `<p class="msg">${items().length?'No hay sabores en este filtro.':'Por ahora no hay sabores en stock. Escribinos y te avisamos cuando lleguen.'}</p>`;
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const it=items().find(x=>x.id===b.dataset.p); const q=(cart[it.id]||0)+1; if(it.max&&q>it.max) return; cart[it.id]=q; save(); render(); spin(it.id); const c=$('cart'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); });
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const k=b.dataset.m; cart[k]=(cart[k]||0)-1; if(cart[k]<=0) delete cart[k]; save(); render(); });
   if(CAT.actualizado){ const d=new Date(CAT.actualizado); $('upd').textContent=`Stock actualizado el ${d.toLocaleDateString('es-AR')} a las ${d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}`; }
