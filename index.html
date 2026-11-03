@@ -227,9 +227,9 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 
 <div class="bar">
   <div class="wrap seg" role="group" aria-label="Filtrar sabores">
-    <button data-m="todos" aria-pressed="true">Todos</button>
-    <button data-m="ik" aria-pressed="false">Ice King</button>
-    <button data-m="bc" aria-pressed="false">BC Pro</button>
+    <button data-mod="todos" aria-pressed="true">Todos</button>
+    <button data-mod="ik" aria-pressed="false">Ice King</button>
+    <button data-mod="bc" aria-pressed="false">BC Pro</button>
     <span class="sep" aria-hidden="true"></span>
     <button data-f="todos" aria-pressed="true">Cualquier sabor</button>
     <button data-f="ice" aria-pressed="false">❄️ Ice</button>
@@ -278,7 +278,7 @@ try{ cart=JSON.parse(ls.get('ik_cart')||'{}')||{}; }catch(e){ cart={}; }
 if(ls.get('ik_18')!=='1') $('gate').hidden=false;
 $('gate-yes').onclick=()=>{ ls.set('ik_18','1'); $('gate').hidden=true; rfAuto(); };
 $('gate-no').onclick=()=>{ document.body.innerHTML='<p class="msg" style="padding:120px 16px">Este catálogo es solo para mayores de 18 años.</p>'; };
-document.querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>{ modelo=b.dataset.m; document.querySelectorAll('button[data-m]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
+document.querySelectorAll('button[data-mod]').forEach(b=>b.onclick=()=>{ modelo=b.dataset.mod; document.querySelectorAll('button[data-mod]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 
 const todos = () => CAT?.items || [];
