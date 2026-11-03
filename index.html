@@ -71,6 +71,19 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 .offers{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 18px;margin-top:6px}
 .offers .offer:nth-child(2){transform:rotate(2deg)}
 .offers .offer{padding:10px 16px 10px}.offers .offer .n{font-size:clamp(34px,9vw,50px)}.offers .offer .x{font-size:clamp(20px,5vw,28px)}.offers .offer .p{font-size:clamp(30px,8vw,44px)}
+/* solapas por modelo */
+.tabs{display:flex;gap:8px;align-items:flex-end;margin-top:18px;padding-left:6px}
+.tab{flex:1 1 0;max-width:330px;min-width:0;text-align:left;border:1px solid rgba(255,255,255,.95);border-bottom:0;border-radius:18px 18px 0 0;padding:10px 14px 12px;
+  background:rgba(255,255,255,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--muted);font-size:13.5px;font-weight:600;line-height:1.3;position:relative}
+.tab small{display:block;font-size:12px;font-weight:700;color:var(--brand)}
+.tab b{display:block;font-family:var(--display);font-weight:900;font-size:clamp(22px,6.5vw,30px);line-height:1;text-transform:uppercase;color:var(--ink);margin:1px 0 3px}
+.tab[aria-selected="true"]{background:#f3f8fa;color:var(--ink);border-top:4px solid var(--brand);padding-top:8px;margin-bottom:-1px;z-index:1}
+.tab[aria-selected="false"]:hover{background:rgba(255,255,255,.75)}
+.panel{position:relative;background:#f3f8fa;border:1px solid rgba(255,255,255,.95);border-radius:4px 22px 22px 22px;padding:12px;box-shadow:0 30px 60px -34px rgba(28,28,31,.45)}
+.panel-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;padding:4px 4px 12px}
+.panel-h p{margin:0;font-weight:600;font-size:14.5px;color:var(--muted)}
+.panel-h p b{color:var(--ink)}
+.panel .msg{background:transparent}
 /* estantes por modelo */
 .shelf{margin-top:18px}
 .shelf:first-child{margin-top:4px}
@@ -83,6 +96,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 /* filters */
 .bar{position:sticky;top:0;z-index:4;padding:12px 0 10px;margin-top:10px}
 .seg{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.panel-h .seg{justify-content:flex-end}
 .seg .sep{width:10px}
 .seg button{border:1px solid var(--line);background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:99px;padding:9px 16px;font-weight:600;font-size:14.5px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -225,20 +239,19 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
   <div class="sheet-card" id="rf-card"></div>
 </div>
 
-<div class="bar">
-  <div class="wrap seg" role="group" aria-label="Filtrar sabores">
-    <button data-mod="todos" aria-pressed="true">Todos</button>
-    <button data-mod="ik" aria-pressed="false">Ice King</button>
-    <button data-mod="bc" aria-pressed="false">BC Pro</button>
-    <span class="sep" aria-hidden="true"></span>
-    <button data-f="todos" aria-pressed="true">Cualquier sabor</button>
-    <button data-f="ice" aria-pressed="false">❄️ Ice</button>
-    <button data-f="noice" aria-pressed="false">Sin ice</button>
-  </div>
-</div>
-
 <main class="wrap">
-  <div id="list"><p class="msg">Cargando sabores…</p></div>
+  <div class="tabs" role="tablist" aria-label="Elegí el modelo" id="tabs"></div>
+  <section class="panel" role="tabpanel" id="panel" aria-labelledby="tab-ik">
+    <div class="panel-h">
+      <p id="tab-info"></p>
+      <div class="seg" role="group" aria-label="Filtrar sabores">
+        <button data-f="todos" aria-pressed="true">Todos</button>
+        <button data-f="ice" aria-pressed="false">❄️ Ice</button>
+        <button data-f="noice" aria-pressed="false">Sin ice</button>
+      </div>
+    </div>
+    <div id="list"><p class="msg">Cargando sabores…</p></div>
+  </section>
   <p class="upd" id="upd"></p>
 </main>
 
@@ -272,13 +285,12 @@ function fridge(colors){
   $('fridge').style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 fridge([]);
-let CAT=null, cart={}, filtro='todos', modelo='todos';
+let CAT=null, cart={}, filtro='todos', modelo=ls.get('ik_mod')||'';
 try{ cart=JSON.parse(ls.get('ik_cart')||'{}')||{}; }catch(e){ cart={}; }
 
 if(ls.get('ik_18')!=='1') $('gate').hidden=false;
 $('gate-yes').onclick=()=>{ ls.set('ik_18','1'); $('gate').hidden=true; rfAuto(); };
 $('gate-no').onclick=()=>{ document.body.innerHTML='<p class="msg" style="padding:120px 16px">Este catálogo es solo para mayores de 18 años.</p>'; };
-document.querySelectorAll('button[data-mod]').forEach(b=>b.onclick=()=>{ modelo=b.dataset.mod; document.querySelectorAll('button[data-mod]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 
 const todos = () => CAT?.items || [];
@@ -290,6 +302,7 @@ function descDe(i){ const d=i.desc||i.descripcion||i.description; if(d) return S
   const k=kDesc(i.sabor); for(const m of [CAT?.descripciones,CAT?.desc,DESC]){ if(m&&typeof m==='object') for(const [n,v] of Object.entries(m)) if(kDesc(n)===k&&typeof v==='string') return v; } return ''; }
 const MOD={ik:{marca:'Elf Bar',nombre:'Ice King'}, bc:{marca:'EBCREATE',nombre:'BC Pro'}};
 const modDe = i => esBC(i.sabor) ? 'bc' : 'ik';
+const cartDe = m => items().filter(i=>modDe(i)===m).reduce((a,i)=>a+(cart[i.id]||0),0);
 function header(){
   const n=items().length; $('chip-n').innerHTML=`<b>${n}</b>&nbsp;sabor${n===1?'':'es'}`;
   const ps=[...new Set(items().map(i=>i.precio).filter(Boolean))];
@@ -325,7 +338,15 @@ function render(){
   if(CAT.activo===false){ $('list').innerHTML='<p class="msg">El catálogo no está disponible en este momento. Escribinos por WhatsApp.</p>'; updCart(); return; }
   rfBanner(); header(); fridge(items().map(colorCard));
   const ids=new Set(items().map(i=>i.id)); for(const k of Object.keys(cart)) if(!ids.has(k)) delete cart[k];
-  const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> (filtro==='todos' || (filtro==='ice'? i.ice : !i.ice)) && (modelo==='todos' || modDe(i)===modelo));
+  const mods=['ik','bc'].filter(m=>todos().some(i=>modDe(i)===m));
+  if(!mods.includes(modelo) || !items().some(i=>modDe(i)===modelo)) modelo = mods.find(m=>items().some(i=>modDe(i)===m)) || mods[0] || 'ik';
+  $('tabs').innerHTML = mods.map(m=>{ const g=items().filter(i=>modDe(i)===m); const ps=g.map(i=>i.precio).filter(Boolean); const en=cartDe(m);
+    return `<button class="tab" role="tab" id="tab-${m}" aria-controls="panel" aria-selected="${m===modelo}" data-tab="${m}"><small>${MOD[m].marca}</small><b>${MOD[m].nombre}</b>${g.length} sabor${g.length===1?'':'es'}${ps.length?` · ${money(Math.min(...ps))}`:''}${en?` · <span class="save">${en} en tu pedido</span>`:''}</button>`; }).join('');
+  $('panel').setAttribute('aria-labelledby','tab-'+modelo);
+  { const ps=[...new Set(items().filter(i=>modDe(i)===modelo).map(i=>i.precio).filter(Boolean))]; const pr=promo(modelo);
+    $('tab-info').innerHTML = `${MOD[modelo].marca} ${MOD[modelo].nombre} 40K${ps.length?` · <b class="num">${money(Math.min(...ps))}</b> c/u`:''}${pr?` · oferta <b class="num">${pr.n} × ${money(pr.precio)}</b>`:''}`; }
+  document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{ modelo=b.dataset.tab; ls.set('ik_mod',modelo); render(); });
+  const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> (filtro==='todos' || (filtro==='ice'? i.ice : !i.ice)) && modDe(i)===modelo);
   const card = i=>{ const q=cart[i.id]||0; return `
     <article class="card ${q?'in':''}${i.agotado?' out':''}" style="--c:${colorCard(i)}">
       <div class="slot" data-slot="${esc(i.id)}"><img src="vape-${modeloDe(i.sabor)}.png?v=2" alt="" width="152" height="316" loading="lazy" decoding="async"></div>
@@ -334,10 +355,7 @@ function render(){
         ${q?`<div class="qty"><button data-m="${esc(i.id)}" aria-label="Quitar uno de ${esc(i.sabor)}">−</button><span class="num">${q}</span><button data-p="${esc(i.id)}" aria-label="Agregar uno de ${esc(i.sabor)}" ${i.max&&q>=i.max?'disabled':''}>+</button></div>`
            :(i.agotado?'<button class="add" disabled>Sin stock</button>':`<button class="add" data-p="${esc(i.id)}">Agregar</button>`)}</div></div>
     </article>`; };
-  const shelf = m => { const g=list.filter(i=>modDe(i)===m); if(!g.length) return '';
-    const ps=[...new Set(g.filter(i=>!i.agotado).map(i=>i.precio).filter(Boolean))]; const pr=promo(m);
-    return `<section class="shelf" aria-labelledby="sh-${m}"><div class="shelf-h"><h2 id="sh-${m}"><small>${MOD[m].marca}</small>${MOD[m].nombre} 40K</h2><p>${ps.length?`<b class="num">${money(Math.min(...ps))}</b> c/u`:''}${pr?` · oferta <b class="num">${pr.n} × ${money(pr.precio)}</b>`:''}</p></div><div class="grid">${g.map(card).join('')}</div></section>`; };
-  $('list').innerHTML = list.length ? ['ik','bc'].map(shelf).join('') : `<p class="msg">${items().length?'No hay sabores en este filtro.':'Por ahora no hay sabores en stock. Escribinos y te avisamos cuando lleguen.'}</p>`;
+  $('list').innerHTML = list.length ? `<div class="grid">${list.map(card).join('')}</div>` : `<p class="msg">${items().length?'No hay sabores en este filtro.':'Por ahora no hay sabores en stock. Escribinos y te avisamos cuando lleguen.'}</p>`;
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const it=items().find(x=>x.id===b.dataset.p); const q=(cart[it.id]||0)+1; if(it.max&&q>it.max) return; cart[it.id]=q; save(); render(); spin(it.id); const c=$('cart'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); });
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const k=b.dataset.m; cart[k]=(cart[k]||0)-1; if(cart[k]<=0) delete cart[k]; save(); render(); });
   if(CAT.actualizado){ const d=new Date(CAT.actualizado); $('upd').textContent=`Stock actualizado el ${d.toLocaleDateString('es-AR')} a las ${d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}`; }
