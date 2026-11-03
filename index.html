@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="theme-color" content="#e6f0f5">
-<title>Ice King · Sabores</title>
+<title>vap.dm · Vapes 40K</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E❄️%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,8 +14,8 @@
 /* "Heladera de kiosco": fixed background of shelves stocked with vapes (built from real stock colors) behind frosted glass.
    Layout: hero (name + price sticker) · sticky filter · flavor slots grid (1 → 2 → 3 cols) · fixed order bar. */
 :root{
-  --frost:#e6f0f5; --glass:rgba(240,248,252,.78); --steel:#9fb3c1; --ink:#0e2a44; --muted:#4f6a80; --line:rgba(14,42,68,.12);
-  --led:#13b5ea; --tag:#ffd23f; --tag-ink:#3a2a00; --wa:#14a85a; --low:#d9480f;
+  --frost:#e6f0f5; --glass:rgba(240,248,252,.78); --steel:#9fb3c1; --ink:#1c1c1f; --muted:#55555d; --line:rgba(28,28,31,.12); --brand:#d7141a;
+  --led:#d7141a; --tag:#ffd23f; --tag-ink:#3a2a00; --wa:#14a85a; --low:#d9480f;
   --display:"Big Shoulders Display", "Arial Narrow", system-ui, sans-serif; --body:"Work Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme:light;
 }
@@ -64,9 +64,26 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 .save{color:var(--wa);font-weight:700}
 .offer .save{color:#0b6b37}
 
+/* logo vap.dm: letras + vape */
+.logo{margin:0;display:flex;align-items:flex-end;justify-content:center;gap:.05em;font-family:var(--display);font-weight:900;font-size:clamp(78px,21vw,150px);line-height:.8;letter-spacing:-.01em;color:var(--brand)}
+.logo svg{height:1.32em;width:auto;margin:0 .02em}
+.models{margin:4px 0 0;font-weight:600;font-size:14.5px;color:var(--muted)}
+.offers{display:flex;flex-wrap:wrap;justify-content:center;gap:14px 18px;margin-top:6px}
+.offers .offer:nth-child(2){transform:rotate(2deg)}
+.offers .offer .n{font-size:clamp(40px,11vw,64px)}.offers .offer .x{font-size:clamp(22px,6vw,34px)}.offers .offer .p{font-size:clamp(34px,9.5vw,56px)}
+/* estantes por modelo */
+.shelf{margin-top:18px}
+.shelf:first-child{margin-top:4px}
+.shelf-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 14px;padding:10px 6px 8px}
+.shelf-h h2{margin:0;font-family:var(--display);font-weight:900;font-size:clamp(30px,8vw,40px);line-height:.95;text-transform:uppercase}
+.shelf-h h2 small{display:block;font-size:.42em;font-weight:800;color:var(--brand);letter-spacing:.02em}
+.shelf-h p{margin:0;font-weight:600;font-size:14.5px;color:var(--muted)}
+.shelf-h p b{color:var(--ink)}
+
 /* filters */
 .bar{position:sticky;top:0;z-index:4;padding:12px 0 10px;margin-top:10px}
-.seg{display:flex;gap:6px;justify-content:center}
+.seg{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.seg .sep{width:10px}
 .seg button{border:1px solid var(--line);background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:99px;padding:9px 16px;font-weight:600;font-size:14.5px;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
 
@@ -185,14 +202,14 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 
 <header class="wrap hero">
   <div class="door">
-    <span class="brand" id="brand">Elf Bar</span>
-    <h1 class="title" id="titulo">Ice King<small>40.000 puffs</small></h1>
+    <h1 class="logo" aria-label="vap.dm"><span aria-hidden="true">vap</span><svg viewBox="0 0 58 270" aria-hidden="true"><path d="M30 70 C 18 56, 42 46, 30 30 C 22 20, 34 10, 30 2" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" opacity=".45"/><path d="M19 92 L39 92 L35 76 L23 76 Z" fill="#1a1a1a"/><rect x="4" y="92" width="50" height="170" rx="16" fill="currentColor"/><rect x="16" y="200" width="26" height="34" rx="7" fill="#fff"/><rect x="21" y="207" width="16" height="5" rx="2.5" fill="currentColor"/><rect x="21" y="217" width="10" height="5" rx="2.5" fill="currentColor"/><rect x="11" y="104" width="7" height="80" rx="3.5" fill="#fff" opacity=".35"/></svg><span aria-hidden="true">dm</span></h1>
+    <p class="models">Elf Bar Ice King y EBCREATE BC Pro, 40.000 puffs</p>
     <div class="chips">
       <span class="chip"><span class="dot"></span>En stock ahora</span>
       <span class="chip" id="chip-n">— sabores</span>
       <span class="chip" id="chip-p" hidden></span>
     </div>
-    <div class="offer" id="promo" hidden></div>
+    <div class="offers" id="promos"></div>
   </div>
 </header>
 
@@ -210,7 +227,11 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 
 <div class="bar">
   <div class="wrap seg" role="group" aria-label="Filtrar sabores">
-    <button data-f="todos" aria-pressed="true">Todos</button>
+    <button data-m="todos" aria-pressed="true">Todos</button>
+    <button data-m="ik" aria-pressed="false">Ice King</button>
+    <button data-m="bc" aria-pressed="false">BC Pro</button>
+    <span class="sep" aria-hidden="true"></span>
+    <button data-f="todos" aria-pressed="true">Todos los sabores</button>
     <button data-f="ice" aria-pressed="false">❄️ Ice</button>
     <button data-f="noice" aria-pressed="false">Sin ice</button>
   </div>
@@ -251,12 +272,13 @@ function fridge(colors){
   $('fridge').style.backgroundImage=`url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 fridge([]);
-let CAT=null, cart={}, filtro='todos';
+let CAT=null, cart={}, filtro='todos', modelo='todos';
 try{ cart=JSON.parse(ls.get('ik_cart')||'{}')||{}; }catch(e){ cart={}; }
 
 if(ls.get('ik_18')!=='1') $('gate').hidden=false;
 $('gate-yes').onclick=()=>{ ls.set('ik_18','1'); $('gate').hidden=true; rfAuto(); };
 $('gate-no').onclick=()=>{ document.body.innerHTML='<p class="msg" style="padding:120px 16px">Este catálogo es solo para mayores de 18 años.</p>'; };
+document.querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>{ modelo=b.dataset.m; document.querySelectorAll('button[data-m]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{ filtro=b.dataset.f; document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',String(x===b))); render(); });
 
 const todos = () => CAT?.items || [];
@@ -266,51 +288,56 @@ let DESC={};
 const kDesc=t=>String(t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
 function descDe(i){ const d=i.desc||i.descripcion||i.description; if(d) return String(d);
   const k=kDesc(i.sabor); for(const m of [CAT?.descripciones,CAT?.desc,DESC]){ if(m&&typeof m==='object') for(const [n,v] of Object.entries(m)) if(kDesc(n)===k&&typeof v==='string') return v; } return ''; }
+const MOD={ik:{marca:'Elf Bar',nombre:'Ice King'}, bc:{marca:'EBCREATE',nombre:'BC Pro'}};
+const modDe = i => esBC(i.sabor) ? 'bc' : 'ik';
 function header(){
-  // "ELF BAR ICE KING 40K PUFF" → marca + nombre + puffs
-  const t=String(CAT?.titulo||'ELF BAR ICE KING 40K PUFF').trim();
-  const m=t.match(/^(elf\s*bar)\s+(.+?)\s+(\d+\s*k)\s*puffs?$/i);
-  if(m){ $('brand').textContent=m[1]; $('titulo').innerHTML=`${esc(m[2])}<small>${esc(m[3].replace(/\s/g,'').toUpperCase())} puffs</small>`; }
-  else { $('brand').textContent='Catálogo'; $('titulo').innerHTML=esc(t); }
   const n=items().length; $('chip-n').innerHTML=`<b>${n}</b>&nbsp;sabor${n===1?'':'es'}`;
   const ps=[...new Set(items().map(i=>i.precio).filter(Boolean))];
   $('chip-p').hidden=!ps.length; if(ps.length) $('chip-p').innerHTML = ps.length===1 ? `<b>${money(ps[0])}</b>&nbsp;c/u` : `desde&nbsp;<b>${money(Math.min(...ps))}</b>`;
-  const pr=promo(); const el=$('promo'); el.hidden=!CAT?.promo;
-  if(pr){ const ahorro = pr.unit ? pr.n*pr.unit - pr.precio : 0;
-    el.innerHTML=`<span class="lbl">Oferta</span><div class="big"><span class="n">${pr.n}</span><span class="x">×</span><span class="p num">${money(pr.precio)}</span></div>
-      <div class="sub">${esc(pr.resto||`Llevá ${pr.n} sabores a elección`)}</div>`; }
-  else if(CAT?.promo){ el.innerHTML=`<span class="lbl">Oferta</span><div class="txt">${esc(CAT.promo)}</div>`; }
+  $('promos').innerHTML = ['ik','bc'].filter(m=>items().some(i=>modDe(i)===m)).map(m=>{ const pr=promo(m), t=promoTxt(m); if(!t) return '';
+    if(pr) return `<div class="offer"><span class="lbl">Oferta ${MOD[m].nombre}</span><div class="big"><span class="n">${pr.n}</span><span class="x">×</span><span class="p num">${money(pr.precio)}</span></div><div class="sub">${esc(pr.resto||`${pr.n} sabores a elección`)}</div></div>`;
+    return `<div class="offer"><span class="lbl">Oferta ${MOD[m].nombre}</span><div class="txt">${esc(t)}</div></div>`; }).join('');
 }
 // "2 x $55.000", "2 por 55000 · Entrega en CABA", "3x$80.000"
-function promo(){
-  const t=String(CAT?.promo||''); const m=t.match(/(\d+)\s*(?:x|×|por)\s*\$?\s*([\d.,]+)/i); if(!m) return null;
+const promoTxt = m => String(m==='bc' ? (CAT?.promoBC ?? '2 x $49.500') : (CAT?.promo||'')).trim();
+function promo(mod){
+  const t=promoTxt(mod); const m=t.match(/(\d+)\s*(?:x|×|por)\s*\$?\s*([\d.,]+)/i); if(!m) return null;
   const n=parseInt(m[1],10), precio=parseInt(m[2].replace(/[.,](?=\d{3}\b)/g,'').replace(/[^\d]/g,''),10);
   if(!(n>=2 && precio>1000)) return null;
   const resto=t.replace(m[0],'').replace(/^[\s·\-–|,.:]+|[\s·\-–|,.:]+$/g,'');
-  const ps=items().map(i=>i.precio).filter(Boolean); const unit=ps.length?Math.max(...ps):0;
+  const ps=items().filter(i=>modDe(i)===mod).map(i=>i.precio).filter(Boolean); const unit=ps.length?Math.max(...ps):0;
   return {n, precio, resto, unit};
 }
 // total con la oferta aplicada a los vapes de precio normal
 function totalCon(sel){
-  const pr=promo(); const lista=[]; sel.forEach(i=>{ for(let k=0;k<cart[i.id];k++) lista.push(i.precio||0); });
-  const normal=lista.reduce((a,b)=>a+b,0); if(!pr) return {total:normal, normal, combos:0};
-  lista.sort((a,b)=>b-a); const combos=Math.floor(lista.length/pr.n); const restoP=lista.slice(combos*pr.n).reduce((a,b)=>a+b,0);
-  const total=Math.min(normal, combos*pr.precio + restoP); return {total, normal, combos: total<normal?combos:0, pr};
+  let total=0, normal=0; const ofertas=[];
+  for(const m of ['ik','bc']){ const g=sel.filter(i=>modDe(i)===m); if(!g.length) continue;
+    const pr=promo(m); const lista=[]; g.forEach(i=>{ for(let k=0;k<cart[i.id];k++) lista.push(i.precio||0); });
+    const nrm=lista.reduce((a,b)=>a+b,0); normal+=nrm;
+    if(!pr){ total+=nrm; continue; }
+    lista.sort((a,b)=>b-a); const combos=Math.floor(lista.length/pr.n); const restoP=lista.slice(combos*pr.n).reduce((a,b)=>a+b,0);
+    const t=Math.min(nrm, combos*pr.precio+restoP); total+=t;
+    ofertas.push({m, pr, combos: t<nrm?combos:0, falta: lista.length%pr.n ? pr.n-lista.length%pr.n : 0}); }
+  return {total, normal, ofertas, combos: ofertas.reduce((a,o)=>a+o.combos,0)};
 }
 function render(){
   if(!CAT) return;
   if(CAT.activo===false){ $('list').innerHTML='<p class="msg">El catálogo no está disponible en este momento. Escribinos por WhatsApp.</p>'; updCart(); return; }
   rfBanner(); header(); fridge(items().map(colorCard));
   const ids=new Set(items().map(i=>i.id)); for(const k of Object.keys(cart)) if(!ids.has(k)) delete cart[k];
-  const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> filtro==='todos' || (filtro==='ice'? i.ice : !i.ice));
-  $('list').innerHTML = list.length ? `<div class="grid">${list.map(i=>{ const q=cart[i.id]||0; return `
+  const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> (filtro==='todos' || (filtro==='ice'? i.ice : !i.ice)) && (modelo==='todos' || modDe(i)===modelo));
+  const card = i=>{ const q=cart[i.id]||0; return `
     <article class="card ${q?'in':''}${i.agotado?' out':''}" style="--c:${colorCard(i)}">
       <div class="slot" data-slot="${esc(i.id)}"><img src="vape-${modeloDe(i.sabor)}.png?v=2" alt="" width="152" height="316" loading="lazy" decoding="async"></div>
-      <div><h2 class="name">${esc(nombre(i.sabor))} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2>${descDe(i)?`<p class="desc">${esc(descDe(i))}</p>`:''}<div class="tags">${esBC(i.sabor)?'<span class="tag bc">EBCREATE BC Pro</span>':''}${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.agotado?'<span class="tag out">Sin stock</span>':''}${!i.agotado&&i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
+      <div><h2 class="name">${esc(nombre(i.sabor))} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2>${descDe(i)?`<p class="desc">${esc(descDe(i))}</p>`:''}<div class="tags">${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.agotado?'<span class="tag out">Sin stock</span>':''}${!i.agotado&&i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
       <div class="foot"><span class="price num">${i.precio?money(i.precio):'Consultar'}</span>
         ${q?`<div class="qty"><button data-m="${esc(i.id)}" aria-label="Quitar uno de ${esc(i.sabor)}">−</button><span class="num">${q}</span><button data-p="${esc(i.id)}" aria-label="Agregar uno de ${esc(i.sabor)}" ${i.max&&q>=i.max?'disabled':''}>+</button></div>`
            :(i.agotado?'<button class="add" disabled>Sin stock</button>':`<button class="add" data-p="${esc(i.id)}">Agregar</button>`)}</div></div>
-    </article>`; }).join('')}</div>` : `<p class="msg">${items().length?'No hay sabores en este filtro.':'Por ahora no hay sabores en stock. Escribinos y te avisamos cuando lleguen.'}</p>`;
+    </article>`; };
+  const shelf = m => { const g=list.filter(i=>modDe(i)===m); if(!g.length) return '';
+    const ps=[...new Set(g.filter(i=>!i.agotado).map(i=>i.precio).filter(Boolean))]; const pr=promo(m);
+    return `<section class="shelf" aria-labelledby="sh-${m}"><div class="shelf-h"><h2 id="sh-${m}"><small>${MOD[m].marca}</small>${MOD[m].nombre} 40K</h2><p>${ps.length?`<b class="num">${money(Math.min(...ps))}</b> c/u`:''}${pr?` · oferta <b class="num">${pr.n} × ${money(pr.precio)}</b>`:''}</p></div><div class="grid">${g.map(card).join('')}</div></section>`; };
+  $('list').innerHTML = list.length ? ['ik','bc'].map(shelf).join('') : `<p class="msg">${items().length?'No hay sabores en este filtro.':'Por ahora no hay sabores en stock. Escribinos y te avisamos cuando lleguen.'}</p>`;
   document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const it=items().find(x=>x.id===b.dataset.p); const q=(cart[it.id]||0)+1; if(it.max&&q>it.max) return; cart[it.id]=q; save(); render(); spin(it.id); const c=$('cart'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); });
   document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ const k=b.dataset.m; cart[k]=(cart[k]||0)-1; if(cart[k]<=0) delete cart[k]; save(); render(); });
   if(CAT.actualizado){ const d=new Date(CAT.actualizado); $('upd').textContent=`Stock actualizado el ${d.toLocaleDateString('es-AR')} a las ${d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}`; }
@@ -368,11 +395,12 @@ $('cart-wa').addEventListener('click',()=>{ if($('cart-wa').getAttribute('aria-d
 function updCart(){
   const sel=items().filter(i=>cart[i.id]);
   const u=sel.reduce((a,i)=>a+cart[i.id],0); const tc=totalCon(sel); const t=tc.total;
-  $('cart-n').innerHTML = u ? `${u} vape${u===1?'':'s'}${tc.combos?` · <span class="save">oferta aplicada −${money(tc.normal-t)}</span>`:(tc.pr&&u%tc.pr.n?` · sumá ${tc.pr.n-u%tc.pr.n} y aplicás la oferta`:'')}` : 'Elegí tus sabores';
+  const falta=tc.ofertas.find(o=>o.falta);
+  $('cart-n').innerHTML = u ? `${u} vape${u===1?'':'s'}${tc.combos?` · <span class="save">oferta aplicada −${money(tc.normal-t)}</span>`:(falta?` · sumá ${falta.falta} ${MOD[falta.m].nombre} y aplicás la oferta`:'')}` : 'Elegí tus sabores';
   $('cart-t').textContent = money(t);
   const tel=String(CAT?.telefono||'').replace(/\D/g,''); const a=$('cart-wa');
   if(u && tel){
-    const txt=`Hola! 👑 Quiero hacer este pedido:\n\n${sel.map(i=>`• ${cart[i.id]} × ${i.sabor} ${i.emoji||''}${i.ice?'❄️':''}`).join('\n')}${tc.combos?`\n\nOferta ${tc.pr.n} × ${money(tc.pr.precio)} (${tc.combos} ${tc.combos>1?'veces':'vez'})`:''}\n\nTotal: ${money(t)}`;
+    const txt=`Hola! 👑 Quiero hacer este pedido:\n\n${sel.map(i=>`• ${cart[i.id]} × ${MOD[modDe(i)].nombre} ${nombre(i.sabor)} ${i.emoji||''}${i.ice?'❄️':''}`).join('\n')}${tc.ofertas.filter(o=>o.combos).map(o=>`\nOferta ${MOD[o.m].nombre} ${o.pr.n} × ${money(o.pr.precio)} (${o.combos} ${o.combos>1?'veces':'vez'})`).join('').replace(/^/,tc.combos?'\n':'')}\n\nTotal: ${money(t)}`;
     a.href=`https://api.whatsapp.com/send?phone=${tel}&text=${encodeURIComponent(txt)}`; a.setAttribute('aria-disabled','false');
   } else { a.href='#'; a.setAttribute('aria-disabled','true'); }
 }
