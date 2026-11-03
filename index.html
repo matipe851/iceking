@@ -82,6 +82,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--led);outline-offset
 .desc{margin:6px 0 0;color:var(--muted);font-size:13.5px;line-height:1.35}
 .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .tag{font-size:12.5px;font-weight:600;padding:2px 9px;border-radius:99px}
+.tag.bc{color:#5b2a86;background:#f1e4fb}
 .tag.ice{color:#0a5f7d;background:#d6f2fc}
 .tag.low{color:#fff;background:var(--low)}
 .foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
@@ -299,13 +300,13 @@ function totalCon(sel){
 function render(){
   if(!CAT) return;
   if(CAT.activo===false){ $('list').innerHTML='<p class="msg">El catálogo no está disponible en este momento. Escribinos por WhatsApp.</p>'; updCart(); return; }
-  rfBanner(); header(); fridge(items().map(i=>colorDe(i.emoji)));
+  rfBanner(); header(); fridge(items().map(colorCard));
   const ids=new Set(items().map(i=>i.id)); for(const k of Object.keys(cart)) if(!ids.has(k)) delete cart[k];
   const list=[...items(),...todos().filter(i=>i.agotado)].filter(i=> filtro==='todos' || (filtro==='ice'? i.ice : !i.ice));
   $('list').innerHTML = list.length ? `<div class="grid">${list.map(i=>{ const q=cart[i.id]||0; return `
-    <article class="card ${q?'in':''}${i.agotado?' out':''}" style="--c:${colorDe(i.emoji)}">
-      <div class="slot" data-slot="${esc(i.id)}"><img src="vape-${modeloDe(i.sabor)}.png?v=1" alt="" width="152" height="316" loading="lazy" decoding="async"></div>
-      <div><h2 class="name">${esc(i.sabor)} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2>${descDe(i)?`<p class="desc">${esc(descDe(i))}</p>`:''}<div class="tags">${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.agotado?'<span class="tag out">Sin stock</span>':''}${!i.agotado&&i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
+    <article class="card ${q?'in':''}${i.agotado?' out':''}" style="--c:${colorCard(i)}">
+      <div class="slot" data-slot="${esc(i.id)}"><img src="vape-${modeloDe(i.sabor)}.png?v=2" alt="" width="152" height="316" loading="lazy" decoding="async"></div>
+      <div><h2 class="name">${esc(nombre(i.sabor))} <span aria-hidden="true">${esc(i.emoji||'')}</span></h2>${descDe(i)?`<p class="desc">${esc(descDe(i))}</p>`:''}<div class="tags">${esBC(i.sabor)?'<span class="tag bc">EBCREATE BC Pro</span>':''}${i.ice?'<span class="tag ice">❄ Ice</span>':''}${i.agotado?'<span class="tag out">Sin stock</span>':''}${!i.agotado&&i.pocas?`<span class="tag low">${i.max?`Quedan ${i.max}`:'Últimas'}</span>`:''}</div>
       <div class="foot"><span class="price num">${i.precio?money(i.precio):'Consultar'}</span>
         ${q?`<div class="qty"><button data-m="${esc(i.id)}" aria-label="Quitar uno de ${esc(i.sabor)}">−</button><span class="num">${q}</span><button data-p="${esc(i.id)}" aria-label="Agregar uno de ${esc(i.sabor)}" ${i.max&&q>=i.max?'disabled':''}>+</button></div>`
            :(i.agotado?'<button class="add" disabled>Sin stock</button>':`<button class="add" data-p="${esc(i.id)}">Agregar</button>`)}</div></div>
@@ -317,7 +318,21 @@ function render(){
 }
 function save(){ ls.set('ik_cart', JSON.stringify(cart)); }
 // color real del Ice King según el sabor
-function modeloDe(sabor){ const t=String(sabor||'').toLowerCase();
+// EBCREATE BC Pro: los sabores se cargan con "(BC Pro)" al final; color real de cada equipo
+const esBC = s => /\(\s*bc ?pro\s*\)/i.test(String(s||''));
+const nombre = s => String(s||'').replace(/\s*\(\s*bc ?pro\s*\)\s*/i,' ').trim();
+const BC_COLOR={pink:'#ff5fb4',lilac:'#d36bf0',red:'#f0474f',coral:'#ff7a5c',blue:'#3fd3e6',sky:'#5aaef0',violet:'#8f6bf5',clear:'#b9c6d0'};
+function bcDe(sabor){ const t=String(sabor||'').toLowerCase();
+  if(/blue ?razz/.test(t)) return 'blue';
+  if(/aurora/.test(t)) return 'sky';
+  if(/water ?melon.*peach|peach/.test(t)) return 'coral';
+  if(/water ?melon|sand[ií]a/.test(t)) return 'red';
+  if(/strawberry blend/.test(t)) return 'lilac';
+  if(/triple ?berry|grape|uva/.test(t)) return 'violet';
+  if(/mint|menta/.test(t)) return 'clear';
+  return 'pink'; }
+const colorCard = i => esBC(i.sabor) ? BC_COLOR[bcDe(i.sabor)] : colorDe(i.emoji);
+function modeloDe(sabor){ if(esBC(sabor)) return 'bc-'+bcDe(sabor); const t=String(sabor||'').toLowerCase();
   if(/blue ?razz|blueberry|mint|menta/.test(t)) return 'blue';
   if(/dragon|grape|uva/.test(t)) return 'purple';
   if(/mango/.test(t)) return 'gold';
